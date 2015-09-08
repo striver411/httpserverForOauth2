@@ -58,19 +58,19 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	oauthClient := conf.Client(oauth2.NoContext, token)
 	client := github.NewClient(oauthClient)
 	user, _, err := client.Users.Get("")
+	fmt.Println("user=======\n", user)
 	if err != nil {
 		fmt.Printf("client.Users.Get() faled with '%s'\n", err)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	fmt.Printf("Logged in as GitHub user: %s\n", *user.Login)
-	fmt.Println("Name:", *user.Email)
 	fmt.Println(token.Extra("id_token"), token.AccessToken)
 	url1 := "/view/a"
 	url2 := "/view/b"
 	url3 := "/view/c"
 	
-	cookie := http.Cookie{ Name: "Username", Value: *user.Email,  Expires: time.Now().Add(time.Hour), HttpOnly: true}
+	cookie := http.Cookie{ Name: "Username", Value: *user.Login,  Expires: time.Now().Add(time.Hour), HttpOnly: true}
 	http.SetCookie(w, &cookie)
 
 	cookie = http.Cookie{ Name: "Token", Value: "",  Expires: time.Now().Add(time.Hour), HttpOnly: true}
@@ -85,7 +85,10 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 
 func handlerView(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Cookies())
-	w.Write([]byte("<html><body>You are in " + r.URL.String() + "</body></html>"))
+	// r.Cookie("name").String()
+	a, _ := r.Cookie("Username")
+
+	w.Write([]byte("<html><body>You are in </br> " + a.String() + "</br> URL = " + r.URL.String() + "</body></html>"))
 }
 
 func main() {
