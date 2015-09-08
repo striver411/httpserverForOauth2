@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -45,6 +46,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	authcode := r.FormValue("code")
 	fmt.Println(authcode)
 	token, err := conf.Exchange(oauth2.NoContext, authcode)
+
 	if err != nil {
 		fmt.Println("token get error")
 		log.Fatal(err)
@@ -62,12 +64,36 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("Logged in as GitHub user: %s\n", *user.Login)
+	fmt.Println("Name:", *user.Email)
 	fmt.Println(token.Extra("id_token"), token.AccessToken)
+	url1 := "/view/a"
+	url2 := "/view/b"
+	url3 := "/view/c"
+	
+	cookie := http.Cookie{ Name: "Username", Value: *user.Email,  Expires: time.Now().Add(time.Hour), HttpOnly: true}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{ Name: "Token", Value: "",  Expires: time.Now().Add(time.Hour), HttpOnly: true}
+	http.SetCookie(w, &cookie)
+
+	cookie = http.Cookie{ Name: "Auth", Value: "",  Expires: time.Now().Add(time.Hour), HttpOnly: true}
+	http.SetCookie(w, &cookie)
+	fmt.Println(w)
+	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
+	// http.SetCookie(w, &cookies)
+}
+
+func handlerView(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.Cookies())
+	w.Write([]byte("<html><body>You are in " + r.URL.String() + "</body></html>"))
 }
 
 func main() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/view", handleGitHubCallback)
+	http.HandleFunc("/view/a", handlerView)
+	http.HandleFunc("/view/b", handlerView)
+	http.HandleFunc("/view/c", handlerView)
 	http.HandleFunc("/oauth", oauth2Handler)
 	http.ListenAndServe(":8080", nil)
 }
