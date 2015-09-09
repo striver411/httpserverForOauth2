@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"github.com/gorilla/sessions"
 	endpoint "golang.org/x/oauth2/github"
 	// newappengine "google.golang.org/appengine"
 	// newurlfetch "google.golang.org/appengine/urlfetch"
 )
+
+var store = sessions.NewCookieStore([]byte("something-very-secret"))
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
@@ -61,7 +63,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("user=======\n", user)
 	if err != nil {
 		fmt.Printf("client.Users.Get() faled with '%s'\n", err)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
 		return
 	}
 	fmt.Printf("Logged in as GitHub user: %s\n", *user.Login)
@@ -70,14 +72,15 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	url2 := "/view/b"
 	url3 := "/view/c"
 	
-	cookie := http.Cookie{ Name: "Username", Value: *user.Login,  Expires: time.Now().Add(time.Hour), HttpOnly: true}
-	http.SetCookie(w, &cookie)
-
-	cookie = http.Cookie{ Name: "Token", Value: "",  Expires: time.Now().Add(time.Hour), HttpOnly: true}
-	http.SetCookie(w, &cookie)
-
-	cookie = http.Cookie{ Name: "Auth", Value: "",  Expires: time.Now().Add(time.Hour), HttpOnly: true}
-	http.SetCookie(w, &cookie)
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	session.Values["UserName"] = *user.Login
+	// session.Values["Token"] = token
+	session.Save(r, w)
+	fmt.Println(session)
 	fmt.Println(w)
 	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
 	// http.SetCookie(w, &cookies)
@@ -86,9 +89,41 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 func handlerView(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Cookies())
 	// r.Cookie("name").String()
-	a, _ := r.Cookie("Username")
+	session, err := store.Get(r, "session-name")
+	fmt.Println(session)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	fmt.Println(session)
+	_, ok := session.Values["UserName"]
+	if !ok {
+		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
+		return
+	}
+	str, ok := session.Values["UserName"].(string)
+	if !ok {
+		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
+		return
+	}
+	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + "</br> URL = " + r.URL.String() + "</body></html>"))
+}
 
-	w.Write([]byte("<html><body>You are in </br> " + a.String() + "</br> URL = " + r.URL.String() + "</body></html>"))
+func MySessionHandler(w http.ResponseWriter, r *http.Request) {
+	// Get a session. We're ignoring the error resulted from decoding an
+	// existing session: Get() always returns a session, even if empty.
+	fmt.Println(r.Cookies())
+	session, _ := store.Get(r, "session-name")
+	// Set some session values.
+	session.Values["foo"] = "bar"
+	session.Values[42] = 43
+	// Save it before we write to the response/return from the handler.
+	session.Save(r, w)
+	fmt.Println(w)
+}
+
+func RedirectHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Auth failed, Redirect"))
 }
 
 func main() {
@@ -98,5 +133,7 @@ func main() {
 	http.HandleFunc("/view/b", handlerView)
 	http.HandleFunc("/view/c", handlerView)
 	http.HandleFunc("/oauth", oauth2Handler)
+	http.HandleFunc("/test1", MySessionHandler)
+	http.HandleFunc("/redirect", RedirectHandler)
 	http.ListenAndServe(":8080", nil)
 }
