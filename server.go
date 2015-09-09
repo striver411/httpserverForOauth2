@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	// "strconv"
+	 "encoding/json"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -79,9 +79,21 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(session)
 		return
 	}
+	jsonToken, err := json.Marshal(*token)
+	fmt.Println("jsonToken:", string(jsonToken))
+	if err != nil {
+	    panic(err.Error())
+	}
+
 	session.Values["UserName"] = *user.Login
-	// session.Values["Token"] = token
-	session.Save(r, w)
+	session.Values["Token"] = string(jsonToken)
+	err = session.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		fmt.Println(session)
+		return
+	}
+
 	fmt.Println(session)
 	fmt.Println(w)
 	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
@@ -105,11 +117,37 @@ func handlerView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	str, ok := session.Values["UserName"].(string)
+	
 	if !ok {
 		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
 		return
 	}
-	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + "</br> URL = " + r.URL.String() + "</body></html>"))
+	
+	str1, _ := session.Values["Token"].(string)
+	
+	fmt.Println(str1)
+	userFromToken, err := checkToken(str1)
+	if err != nil {
+		fmt.Println(err)
+	}
+	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + userFromToken +  "</br> URL = " + r.URL.String() + "</body></html>"))
+}
+
+func checkToken(jsonToken string) (string, error) {
+	var token oauth2.Token
+	fmt.Println("jsonToken:", string(jsonToken))
+	err := json.Unmarshal([]byte(jsonToken), &token)
+	if err != nil {
+		return "", err
+	}
+	oauthClient := conf.Client(oauth2.NoContext, &token)
+	client := github.NewClient(oauthClient)
+	user, _, err := client.Users.Get("")
+	
+	if err != nil {
+		return "", err
+	}
+	return *user.Login, nil
 }
 
 func MySessionHandler(w http.ResponseWriter, r *http.Request) {
