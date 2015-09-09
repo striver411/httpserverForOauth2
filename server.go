@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	// "strconv"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -67,7 +68,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("Logged in as GitHub user: %s\n", *user.Login)
-	fmt.Println(token.Extra("id_token"), token.AccessToken)
+	// fmt.Println(token.Extra("id_token"), token.AccessToken)
 	url1 := "/view/a"
 	url2 := "/view/b"
 	url3 := "/view/c"
@@ -75,6 +76,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "session-name")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
+		fmt.Println(session)
 		return
 	}
 	session.Values["UserName"] = *user.Login
@@ -92,7 +94,8 @@ func handlerView(w http.ResponseWriter, r *http.Request) {
 	session, err := store.Get(r, "session-name")
 	fmt.Println(session)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		// http.Error(w, err.Error(), 500)
+		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
 		return
 	}
 	fmt.Println(session)
@@ -126,6 +129,25 @@ func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Auth failed, Redirect"))
 }
 
+func RemoveHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println(r.Cookies())
+	_, err := r.Cookie("session-name")
+	if err != nil {
+		w.Write([]byte("no such cookie"))
+		return
+	}
+	// expire := time.Now().AddDate(0, 0, 1)
+
+	cookieMonster := &http.Cookie{
+		Name:  "session-name",
+		MaxAge : -1,
+	}
+	http.SetCookie(w, cookieMonster)
+	w.Write([]byte("Delete successful!"))
+
+}
+
+
 func main() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/view", handleGitHubCallback)
@@ -135,5 +157,6 @@ func main() {
 	http.HandleFunc("/oauth", oauth2Handler)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
+	http.HandleFunc("/deletecookie", RemoveHandler)
 	http.ListenAndServe(":8080", nil)
 }
