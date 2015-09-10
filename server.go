@@ -1,14 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	 "encoding/json"
 
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 	"github.com/gorilla/sessions"
+	"golang.org/x/oauth2"
 	endpoint "golang.org/x/oauth2/github"
 	// newappengine "google.golang.org/appengine"
 	// newurlfetch "google.golang.org/appengine/urlfetch"
@@ -30,8 +30,8 @@ var conf = &oauth2.Config{
 	ClientSecret: "e7de8b20bdc18a0d4c221a319ef1a585b3c187a4",
 	// Scopes:       []string{},
 	// Scopes:      []string{"SCOPE1", "SCOPE2"},
-	Scopes:      []string{"user:email", "repo", "openid", "profile"},
-	Endpoint:    endpoint.Endpoint,
+	Scopes:   []string{"user:email", "repo", "openid", "profile"},
+	Endpoint: endpoint.Endpoint,
 	// RedirectURL: "http://10.14.26.102:8080/view",
 }
 
@@ -43,7 +43,6 @@ func oauth2Handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(url)
 	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url + "'><button>Login with githbub!</button> </a> </body></html>"))
 }
-
 
 func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	authcode := r.FormValue("code")
@@ -72,7 +71,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	url1 := "/view/a"
 	url2 := "/view/b"
 	url3 := "/view/c"
-	
+
 	session, err := store.Get(r, "session-name")
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -82,7 +81,7 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	jsonToken, err := json.Marshal(*token)
 	fmt.Println("jsonToken:", string(jsonToken))
 	if err != nil {
-	    panic(err.Error())
+		panic(err.Error())
 	}
 
 	session.Values["UserName"] = *user.Login
@@ -117,20 +116,20 @@ func handlerView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	str, ok := session.Values["UserName"].(string)
-	
+
 	if !ok {
 		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
 		return
 	}
-	
+
 	str1, _ := session.Values["Token"].(string)
-	
+
 	fmt.Println(str1)
 	userFromToken, err := checkToken(str1)
 	if err != nil {
 		fmt.Println(err)
 	}
-	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + userFromToken +  "</br> URL = " + r.URL.String() + "</body></html>"))
+	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + userFromToken + "</br> URL = " + r.URL.String() + "</body></html>"))
 }
 
 func checkToken(jsonToken string) (string, error) {
@@ -143,7 +142,7 @@ func checkToken(jsonToken string) (string, error) {
 	oauthClient := conf.Client(oauth2.NoContext, &token)
 	client := github.NewClient(oauthClient)
 	user, _, err := client.Users.Get("")
-	
+
 	if err != nil {
 		return "", err
 	}
@@ -177,21 +176,19 @@ func RemoveHandler(w http.ResponseWriter, r *http.Request) {
 	// expire := time.Now().AddDate(0, 0, 1)
 
 	cookieMonster := &http.Cookie{
-		Name:  "session-name",
-		MaxAge : -1,
+		Name:   "session-name",
+		MaxAge: -1,
 	}
 	http.SetCookie(w, cookieMonster)
 	w.Write([]byte("Delete successful!"))
-
 }
-
 
 func main() {
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/view", handleGitHubCallback)
-	http.HandleFunc("/view/a", handlerView)
-	http.HandleFunc("/view/b", handlerView)
-	http.HandleFunc("/view/c", handlerView)
+	http.HandleFunc("/view/getappdata", handlerView)
+	http.HandleFunc("/view/addnewone", handlerView)
+	http.HandleFunc("/view/getapplist", handlerView)
 	http.HandleFunc("/oauth", oauth2Handler)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
