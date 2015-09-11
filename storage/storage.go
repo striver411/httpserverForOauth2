@@ -18,15 +18,16 @@ const (
 
 // URL/Content struct format
 type UserFormat struct {
-	Account_id  string
-	UserName    string
-	Password    string
-	GithubName  string
-	RealityName string
-	Phone       string
-	Email       string
-	Wechat      string
-	QQAccount   string
+	// Account_id  int
+	Id          string `json:"id" bson:"_id,omitempty"`
+	Username    string `json:"username"`
+	Password    string `json:"password"`
+	GithubName  string `json:"githubname"`
+	RealityName string `json:"realityname"`
+	Phone       string `json:"phone"`
+	Email       string `json:"email"`
+	Wechat      string `json:"wechat"`
+	QQAccount   string `json:"qqaccount"`
 }
 
 // Link2CollectionByDefault 	returns the database server with specfic URL.
@@ -51,7 +52,18 @@ func Link2Collection(session *mgo.Session, dbname, username, password, collectio
 		mongoDb.Login(username, password)
 	}
 	return mongoDb.C(collectionname)
+}
 
+func EnsureCollection(c *mgo.Collection, key []string, Unique, DropDups, Background, Sparse bool) error {
+	return c.EnsureIndex(
+		mgo.Index{
+			Key:        key,
+			Unique:     Unique,
+			DropDups:   DropDups,
+			Background: Background,
+			Sparse:     Sparse,
+		},
+	)
 }
 
 // Link2CollectionByDefault returns the collection server with default settings.
@@ -60,12 +72,13 @@ func Link2CollectionByDefault(session *mgo.Session) *mgo.Collection {
 }
 
 // StoreInsert adds a url/content pair into database.
-func StoreInsert(c *mgo.Collection, in userFormat) error {
+func StoreInsert(c *mgo.Collection, in UserFormat) error {
 	err := c.Insert(&in)
 	return err
 }
 
-func FindMatchUser(c *mgo.Collection, in userFormat) (string, bool) {
-	t := c.Find(&in{GithubName: accoutName})
-	fmt.Println(t)
+func FindMatchUser(c *mgo.Collection, in UserFormat) (string, bool) {
+	t := c.Find(in)
+	fmt.Println(*t)
+	return "", true
 }
