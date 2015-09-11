@@ -80,8 +80,8 @@ func requestAppInfo(appID string) (AppStats, error) {
 	return appInfo, nil
 }
 
-func requestRegisterApp(appID string, appInfo PostRegisterAppObj) (AppIdentifer, error) {
-	u, _ := url.Parse("http://deepshare.chinacloudapp.cn:8080/apps/" + appID)
+func requestRegisterApp(accountID string, appInfo PostRegisterAppObj) (AppIdentifer, error) {
+	u, _ := url.Parse("http://deepshare.chinacloudapp.cn:8080/apps/" + accountID)
 	q := u.Query()
 	u.RawQuery = q.Encode()
 	jsonStr, err := json.Marshal(appInfo)

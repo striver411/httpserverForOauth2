@@ -45,10 +45,9 @@ func oauth2Handler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/", Handler)
 	http.HandleFunc("/view", HandleGitHubCallback)
-	http.HandleFunc("/view/getappdata", HandlerView)
-	http.HandleFunc("/view/addnewone", HandlerView)
-	http.HandleFunc("/view/getapplist", HandlerView)
-	http.HandleFunc("/oauth", Oauth2Handler)
+	http.HandleFunc("/view/getappdata", AppInfoView)
+	http.HandleFunc("/view/addnewapp", AddAppView)
+	http.HandleFunc("/view/supplementuserinfo", UserInfoUpdateView)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
 	// http.HandleFunc("/deletecookie", RemoveHandler)
