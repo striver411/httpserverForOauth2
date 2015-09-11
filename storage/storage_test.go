@@ -36,8 +36,8 @@ func TestStore2Mongo(t *testing.T) {
 		GithubName string
 	}{{"a", "b", "c"}}
 
-	// testCol, _ := randString(10)
-	testCol := "fortest"
+	testCol, _ := randString(10)
+	// testCol := "fortest"
 
 	fmt.Println(testCol)
 	c := Link2Collection(dbSession, MONGODB_DB, MONGODB_USER, MONGODB_PWD, testCol, true)

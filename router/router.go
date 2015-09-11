@@ -91,23 +91,6 @@ func HandleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	// http.SetCookie(w, &cookies)
 }
 
-func CheckToken(jsonToken string) (string, error) {
-	var token oauth2.Token
-	fmt.Println("jsonToken:", string(jsonToken))
-	err := json.Unmarshal([]byte(jsonToken), &token)
-	if err != nil {
-		return "", err
-	}
-	oauthClient := conf.Client(oauth2.NoContext, &token)
-	client := github.NewClient(oauthClient)
-	user, _, err := client.Users.Get("")
-
-	if err != nil {
-		return "", err
-	}
-	return *user.Login, nil
-}
-
 func MySessionHandler(w http.ResponseWriter, r *http.Request) {
 	// Get a session. We're ignoring the error resulted from decoding an
 	// existing session: Get() always returns a session, even if empty.

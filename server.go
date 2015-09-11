@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/sessions"
@@ -10,6 +11,7 @@ import (
 	// newappengine "google.golang.org/appengine"
 	// newurlfetch "google.golang.org/appengine/urlfetch"
 	. "./router"
+	"./storage"
 )
 
 var store = sessions.NewCookieStore([]byte("something-very-secret"))
@@ -43,13 +45,22 @@ func oauth2Handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/", Handler)
+	dbSession, err := storage.Link2DbByDefault()
+	defer dbSession.Close()
+	if err != nil {
+		log.Fatal("mongodb error, ", err)
+	}
+	storage.Link2UserCollectionByDefault(dbSession)
+
+	http.HandleFunc("/", Oauth2Handler)
 	http.HandleFunc("/view", HandleGitHubCallback)
 	http.HandleFunc("/view/getappdata", AppInfoView)
 	http.HandleFunc("/view/addnewapp", AddAppView)
 	http.HandleFunc("/view/supplementuserinfo", UserInfoUpdateView)
+	http.HandleFunc("/view/dispalyuserinfo", UserInfoDisplayView)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
 	// http.HandleFunc("/deletecookie", RemoveHandler)
 	http.ListenAndServe(":8080", nil)
+
 }

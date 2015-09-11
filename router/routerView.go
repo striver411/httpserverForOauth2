@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"../storage"
 )
 
 type AppListInfo struct {
@@ -99,9 +101,32 @@ func AddAppView(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserInfoUpdateView(w http.ResponseWriter, r *http.Request) {
-	// accountID := "testaccount"
-
+	accountID := "testaccount"
+	// storage.StoreInsert(storage.UserFormat{Username: accountID})
+	r.ParseForm()
+	storage.ModifyUser(
+		storage.UserFormat{
+			Username: accountID,
+		},
+		storage.UserFormat{
+			Password:    r.FormValue("password"),
+			GithubName:  r.FormValue("githubname"),
+			RealityName: r.FormValue("realityname"),
+			Phone:       r.FormValue("phone"),
+			Email:       r.FormValue("email"),
+			Wechat:      r.FormValue("wechat"),
+			QQAccount:   r.FormValue("qqaccount"),
+		},
+		false,
+	)
 }
 
 func UserInfoDisplayView(w http.ResponseWriter, r *http.Request) {
+	accountID := "testaccount"
+	result, err := storage.FindMatchUser(storage.UserFormat{Username: accountID}, true)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	fmt.Println(result)
 }
