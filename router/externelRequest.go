@@ -9,25 +9,25 @@ import (
 	"net/url"
 )
 
-func checkSession(w *http.ResponseWriter, r *http.Request) string {
+func checkSession(w http.ResponseWriter, r *http.Request) string {
 	session, err := store.Get(r, "session-name")
 	fmt.Println(session)
 	if err != nil {
 		// http.Error(w, err.Error(), 500)
 		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
+		return ""
 	}
 	fmt.Println(session)
 	_, ok := session.Values["AccountID"]
 	if !ok {
 		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
+		return ""
 	}
 	str, ok := session.Values["AccountID"].(string)
 
 	if !ok {
 		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
+		return ""
 	}
 	return str
 }
@@ -65,7 +65,7 @@ func requestAppInfo(appID string) (AppStats, error) {
 		return AppStats{}, err
 	}
 	if res.StatusCode != 200 {
-		return AppIdentifer{}, fmt.Errorf("Failed request, error Msg = %v", res.Status)
+		return AppStats{}, fmt.Errorf("Failed request, error Msg = %v", res.Status)
 	}
 	// receive data
 	result, err := ioutil.ReadAll(res.Body)

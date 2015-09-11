@@ -1,6 +1,10 @@
 package render
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+)
 
 type AppListInfo struct {
 	AppID   string `json:"appid"`
@@ -30,6 +34,27 @@ type PostRegisterAppObj struct {
 
 func AppInfoView(w http.ResponseWriter, r *http.Request) {
 	accountID := "testaccount"
+
+	appIDString := r.FormValue("appID")
+	appID := int64(0)
+	if appIDString != "" {
+		var err error
+		appID, err = strconv.ParseInt(appIDString, 10, 64)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+		}
+	}
+	fmt.Println(appID)
+	applist, err := requestApplist(accountID)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+	}
+	appstats, err := requestAppInfo(applist[0].AppID)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+	}
+	fmt.Println(applist)
+	fmt.Println(appstats)
 	// checkSession(w, r)
 
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
+	endpoint "golang.org/x/oauth2/github"
 )
 
 var store = sessions.NewCookieStore([]byte("something-very-secret"))

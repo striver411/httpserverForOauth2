@@ -9,6 +9,7 @@ import (
 	endpoint "golang.org/x/oauth2/github"
 	// newappengine "google.golang.org/appengine"
 	// newurlfetch "google.golang.org/appengine/urlfetch"
+	. "./router"
 )
 
 var store = sessions.NewCookieStore([]byte("something-very-secret"))
@@ -50,6 +51,6 @@ func main() {
 	http.HandleFunc("/oauth", Oauth2Handler)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
-	http.HandleFunc("/deletecookie", RemoveHandler)
+	// http.HandleFunc("/deletecookie", RemoveHandler)
 	http.ListenAndServe(":8080", nil)
 }
