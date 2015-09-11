@@ -1,6 +1,6 @@
-// Package router implements a router system, handle deal with user
-// requset url by hanler function.
-package router
+// Package render implements a URL handler system, applying exclusive
+// handler to deal with user URL request.
+package render
 
 import (
 	"encoding/json"
@@ -9,8 +9,31 @@ import (
 	"net/http"
 
 	"github.com/google/go-github/github"
+	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 )
+
+var store = sessions.NewCookieStore([]byte("something-very-secret"))
+
+type Page struct {
+	Title string
+	Body  []byte
+}
+
+var conf = &oauth2.Config{
+	ClientID:     "9487562b91cf0e58a7f5",
+	ClientSecret: "e7de8b20bdc18a0d4c221a319ef1a585b3c187a4",
+	// Scopes:       []string{},
+	Scopes:   []string{"user:email", "repo", "openid", "profile"},
+	Endpoint: endpoint.Endpoint,
+	// RedirectURL: "http://10.14.26.102:8080/view",
+}
+
+func Oauth2Handler(w http.ResponseWriter, r *http.Request) {
+	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	fmt.Println(url)
+	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url + "'><button>Login with githbub!</button> </a> </body></html>"))
+}
 
 func HandleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	authcode := r.FormValue("code")
@@ -67,39 +90,6 @@ func HandleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	// http.SetCookie(w, &cookies)
 }
 
-func HandlerView(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Cookies())
-	// r.Cookie("name").String()
-	session, err := store.Get(r, "session-name")
-	fmt.Println(session)
-	if err != nil {
-		// http.Error(w, err.Error(), 500)
-		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
-	}
-	fmt.Println(session)
-	_, ok := session.Values["UserName"]
-	if !ok {
-		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
-	}
-	str, ok := session.Values["UserName"].(string)
-
-	if !ok {
-		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
-		return
-	}
-
-	str1, _ := session.Values["Token"].(string)
-
-	fmt.Println(str1)
-	userFromToken, err := checkToken(str1)
-	if err != nil {
-		fmt.Println(err)
-	}
-	w.Write([]byte("<html><body>You are in </br> " + str + "</br>" + userFromToken + "</br> URL = " + r.URL.String() + "</body></html>"))
-}
-
 func CheckToken(jsonToken string) (string, error) {
 	var token oauth2.Token
 	fmt.Println("jsonToken:", string(jsonToken))
@@ -134,19 +124,17 @@ func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Auth failed, Redirect"))
 }
 
-func RemoveHandler(w http.ResponseWriter, r *http.Request) {
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Cookies())
 	_, err := r.Cookie("session-name")
 	if err != nil {
 		w.Write([]byte("no such cookie"))
 		return
 	}
-	// expire := time.Now().AddDate(0, 0, 1)
-
 	cookieMonster := &http.Cookie{
 		Name:   "session-name",
 		MaxAge: -1,
 	}
 	http.SetCookie(w, cookieMonster)
-	w.Write([]byte("Delete successful!"))
+	http.Redirect(w, r, "/", http.StatusUnauthorized)
 }
