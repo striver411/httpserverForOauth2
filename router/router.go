@@ -1,11 +1,10 @@
-// Package render implements a URL handler system, applying exclusive
+// Package router implements a URL handler system, applying exclusive
 // handler to deal with user URL request.
-package render
+package router
 
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/google/go-github/github"
@@ -30,20 +29,18 @@ var conf = &oauth2.Config{
 	// RedirectURL: "http://10.14.26.102:8080/view",
 }
 
-func Oauth2Handler(w http.ResponseWriter, r *http.Request) {
-	url := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
-	fmt.Println(url)
-	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url + "'><button>Login with githbub!</button> </a> </body></html>"))
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+	urlGithub := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	fmt.Println(urlGithub)
+	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + urlGithub + "'><button>Login with githbub!</button> </a> </body></html>"))
 }
 
-func HandleGitHubCallback(w http.ResponseWriter, r *http.Request) {
+func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 	authcode := r.FormValue("code")
-	fmt.Println(authcode)
 	token, err := conf.Exchange(oauth2.NoContext, authcode)
-
 	if err != nil {
-		fmt.Println("token get error")
-		log.Fatal(err)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
 	}
 	fmt.Println("token:")
 	fmt.Println(token)
@@ -52,43 +49,43 @@ func HandleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	oauthClient := conf.Client(oauth2.NoContext, token)
 	client := github.NewClient(oauthClient)
 	user, _, err := client.Users.Get("")
-	fmt.Println("user=======\n", user)
 	if err != nil {
-		fmt.Printf("client.Users.Get() faled with '%s'\n", err)
-		http.Redirect(w, r, "/redirect", http.StatusUnauthorized)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	fmt.Printf("Logged in as GitHub user: %s\n", *user.Login)
 	// fmt.Println(token.Extra("id_token"), token.AccessToken)
-	url1 := "/view/a"
-	url2 := "/view/b"
-	url3 := "/view/c"
-
-	session, err := store.Get(r, "session-name")
-	if err != nil {
-		http.Error(w, err.Error(), 500)
-		fmt.Println(session)
-		return
-	}
 	jsonToken, err := json.Marshal(*token)
-	fmt.Println("jsonToken:", string(jsonToken))
 	if err != nil {
 		panic(err.Error())
 	}
-
-	session.Values["UserName"] = *user.Login
-	session.Values["Token"] = string(jsonToken)
+	accountID, err := GetAccountID(*user.Login, string(jsonToken))
+	fmt.Println("getAccountID : \n", accountID, err)
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	session.Values["AccountID"] = accountID
 	err = session.Save(r, w)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
-		fmt.Println(session)
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
-	fmt.Println(session)
-	fmt.Println(w)
-	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
+	http.Redirect(w, r, "/view/getappdata", http.StatusTemporaryRedirect)
 	// http.SetCookie(w, &cookies)
+}
+
+func MainViewHandle(w http.ResponseWriter, r *http.Request) {
+	url1 := "/view/a"
+	url2 := "/view/b"
+	url3 := "/view/c"
+	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
 }
 
 func MySessionHandler(w http.ResponseWriter, r *http.Request) {

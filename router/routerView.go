@@ -1,4 +1,4 @@
-package render
+package router
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ type PostRegisterAppObj struct {
 	UrlYYB      string `json:"url_yyb"`
 }
 
-func AppInfoView(w http.ResponseWriter, r *http.Request) {
+func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 	accountID := "testaccount"
 	r.ParseForm()
 	appIDString := r.FormValue("appID")
@@ -76,7 +76,7 @@ func AppInfoView(w http.ResponseWriter, r *http.Request) {
 // 		fmt.Println(err)
 // 	}
 
-func AddAppView(w http.ResponseWriter, r *http.Request) {
+func AddAppViewHandler(w http.ResponseWriter, r *http.Request) {
 	accountID := "testaccount"
 	r.ParseForm()
 	if r.FormValue("fullpkgname") == "" {
@@ -100,7 +100,7 @@ func AddAppView(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(res)
 }
 
-func UserInfoUpdateView(w http.ResponseWriter, r *http.Request) {
+func UserInfoUpdateViewHandler(w http.ResponseWriter, r *http.Request) {
 	accountID := "testaccount"
 	// storage.StoreInsert(storage.UserFormat{Username: accountID})
 	r.ParseForm()
@@ -121,7 +121,7 @@ func UserInfoUpdateView(w http.ResponseWriter, r *http.Request) {
 	)
 }
 
-func UserInfoDisplayView(w http.ResponseWriter, r *http.Request) {
+func UserInfoDisplayViewHandler(w http.ResponseWriter, r *http.Request) {
 	accountID := "testaccount"
 	result, err := storage.FindMatchUser(storage.UserFormat{Username: accountID}, true)
 	if err != nil {

@@ -52,12 +52,12 @@ func main() {
 	}
 	storage.Link2UserCollectionByDefault(dbSession)
 
-	http.HandleFunc("/", Oauth2Handler)
-	http.HandleFunc("/view", HandleGitHubCallback)
-	http.HandleFunc("/view/getappdata", AppInfoView)
-	http.HandleFunc("/view/addnewapp", AddAppView)
-	http.HandleFunc("/view/supplementuserinfo", UserInfoUpdateView)
-	http.HandleFunc("/view/dispalyuserinfo", UserInfoDisplayView)
+	http.HandleFunc("/", LoginHandler)
+	http.HandleFunc("/githubfeedback", GitHubCallbackHandler)
+	http.HandleFunc("/view/getappdata", AppInfoViewHandler)
+	http.HandleFunc("/view/addnewapp", AddAppViewHandler)
+	http.HandleFunc("/view/supplementuserinfo", UserInfoUpdateViewHandler)
+	http.HandleFunc("/view/dispalyuserinfo", UserInfoDisplayViewHandler)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
 	// http.HandleFunc("/deletecookie", RemoveHandler)

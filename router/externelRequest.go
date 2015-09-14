@@ -1,4 +1,4 @@
-package render
+package router
 
 import (
 	"bytes"
@@ -7,46 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
-
-func CheckToken(jsonToken string) (string, error) {
-	var token oauth2.Token
-	fmt.Println("jsonToken:", string(jsonToken))
-	err := json.Unmarshal([]byte(jsonToken), &token)
-	if err != nil {
-		return "", err
-	}
-	oauthClient := conf.Client(oauth2.NoContext, &token)
-	client := github.NewClient(oauthClient)
-	user, _, err := client.Users.Get("")
-
-	if err != nil {
-		return "", err
-	}
-	return *user.Login, nil
-}
-
-func checkSession(w http.ResponseWriter, r *http.Request) (string, bool) {
-	session, err := store.Get(r, "session-name")
-	if err != nil {
-		// http.Error(w, err.Error(), 500)
-		return "", false
-	}
-	fmt.Println(session)
-	_, ok := session.Values["AccountID"]
-	if !ok {
-		return "", false
-	}
-	str, ok := session.Values["AccountID"].(string)
-
-	if !ok {
-		return "", false
-	}
-	return str, true
-}
 
 func requestApplist(accountID string) ([]AppListInfo, error) {
 	u, _ := url.Parse("http://deepshare.chinacloudapp.cn:8080/apps/" + accountID)

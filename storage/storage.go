@@ -2,6 +2,8 @@
 package storage
 
 import (
+	"fmt"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -81,8 +83,12 @@ func StoreInsert(in UserFormat) error {
 }
 
 func FindMatchUser(matchPattern UserFormat, all bool) ([]UserFormat, error) {
-	t := UserCol.Find(matchPattern)
 	result := []UserFormat{}
+	if UserCol == nil {
+		return result, fmt.Errorf("Collection not prepare!")
+	}
+
+	t := UserCol.Find(matchPattern)
 	var err error
 	if all {
 		err = t.All(&result)
