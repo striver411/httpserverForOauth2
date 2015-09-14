@@ -27,6 +27,7 @@ type UserFormat struct {
 	Email       string `json:"email" bson:"email,omitempty"`
 	Wechat      string `json:"wechat" bson:"wechat,omitempty"`
 	QQAccount   string `json:"qqaccount" bson:"qqaccount,omitempty"`
+	Token       string `json:"token" bson:"token,omitempty"`
 }
 
 var UserCol *mgo.Collection

@@ -34,13 +34,12 @@ func TestStore2Mongo(t *testing.T) {
 		Username   string
 		Password   string
 		GithubName string
-	}{{"a", "b", "c"}}
+		Token      string
+	}{{"a", "b", "c", "d"}}
 
-	testCol, _ := randString(10)
 	// testCol := "fortest"
-
-	fmt.Println(testCol)
-	c := Link2Collection(dbSession, MONGODB_DB, MONGODB_USER, MONGODB_PWD, testCol, true)
+	testCol, _ := randString(10)
+	c := Link2UserCollection(dbSession, MONGODB_DB, MONGODB_USER, MONGODB_PWD, testCol, true)
 	defer c.DropCollection()
 	err = EnsureCollection(c, []string{"username", "githubname"}, true, true, true, true)
 	if err != nil {
@@ -54,9 +53,9 @@ func TestStore2Mongo(t *testing.T) {
 			Username:   i.Username,
 			Password:   i.Password,
 			GithubName: i.GithubName,
+			Token:      i.Token,
 		}
-		fmt.Println(insertSet)
-		err := StoreInsert(c, insertSet)
+		err := StoreInsert(insertSet)
 		if err != nil {
 			t.Errorf("%v", err)
 		}
@@ -68,7 +67,6 @@ func TestStore2Mongo(t *testing.T) {
 		if i.GithubName != result.GithubName || i.Password != result.Password {
 			t.Errorf("db store mismatch, when store %s", i.Username)
 		}
-		fmt.Println(result)
 	}
 
 	if err != nil {
