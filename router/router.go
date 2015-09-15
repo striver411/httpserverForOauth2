@@ -5,6 +5,7 @@ package router
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 
 	"github.com/google/go-github/github"
@@ -20,6 +21,10 @@ type Page struct {
 	Body  []byte
 }
 
+type Person struct {
+	UserName string
+}
+
 var conf = &oauth2.Config{
 	ClientID:     "9487562b91cf0e58a7f5",
 	ClientSecret: "e7de8b20bdc18a0d4c221a319ef1a585b3c187a4",
@@ -32,7 +37,24 @@ var conf = &oauth2.Config{
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	urlGithub := conf.AuthCodeURL("state", oauth2.AccessTypeOffline)
 	fmt.Println(urlGithub)
-	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + urlGithub + "'><button>Login with githbub!</button> </a> </body></html>"))
+	t, _ := template.New("login.html").ParseFiles("ds/site/login.html")
+
+	fmt.Println(t)
+	data := struct {
+		Title         string
+		Items         []string
+		GithubAuthURL string
+	}{
+		Title: "My page",
+		Items: []string{
+			"My photos",
+			"My blog",
+		},
+		GithubAuthURL: urlGithub,
+	}
+
+	t.Execute(w, data) // merge.
+
 }
 
 func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -79,13 +101,6 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/view/getappdata", http.StatusTemporaryRedirect)
 	// http.SetCookie(w, &cookies)
-}
-
-func MainViewHandle(w http.ResponseWriter, r *http.Request) {
-	url1 := "/view/a"
-	url2 := "/view/b"
-	url3 := "/view/c"
-	w.Write([]byte("<html><title>Golang Login github Example</title> <body> <a href='" + url1 + "'><button>url1</button> </a> <a href='" + url2 + "'><button>url2</button> </a><a href='" + url3 + "'><button>url3</button> </a></body></html>"))
 }
 
 func MySessionHandler(w http.ResponseWriter, r *http.Request) {

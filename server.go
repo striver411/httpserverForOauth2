@@ -60,6 +60,7 @@ func main() {
 	http.HandleFunc("/view/dispalyuserinfo", UserInfoDisplayViewHandler)
 	http.HandleFunc("/test1", MySessionHandler)
 	http.HandleFunc("/redirect", RedirectHandler)
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("ds/assets"))))
 	// http.HandleFunc("/deletecookie", RemoveHandler)
 	http.ListenAndServe(":8080", nil)
 
