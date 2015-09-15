@@ -54,14 +54,17 @@ func main() {
 
 	http.HandleFunc("/", LoginHandler)
 	http.HandleFunc("/githubfeedback", GitHubCallbackHandler)
-	http.HandleFunc("/view/getappdata", AppInfoViewHandler)
-	http.HandleFunc("/view/addnewapp", AddAppViewHandler)
-	http.HandleFunc("/view/supplementuserinfo", UserInfoUpdateViewHandler)
-	http.HandleFunc("/view/dispalyuserinfo", UserInfoDisplayViewHandler)
-	http.HandleFunc("/test1", MySessionHandler)
+	http.HandleFunc("/index", AppInfoViewHandler)
+	http.HandleFunc("/addapp", AddAppViewHandler)
+	http.HandleFunc("/profile", UserInfoDisplayViewHandler)
+
+	http.HandleFunc("/post/addnewappop", AddAppPostHandler)
+	http.HandleFunc("/post/modifyuserinfo", UserInfoUpdateViewHandler)
+
 	http.HandleFunc("/redirect", RedirectHandler)
+	http.HandleFunc("/logout", LogoutHandler)
 	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("ds/assets"))))
-	// http.HandleFunc("/deletecookie", RemoveHandler)
+
 	http.ListenAndServe(":8080", nil)
 
 }

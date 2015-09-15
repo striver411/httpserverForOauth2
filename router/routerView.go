@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"text/template"
 
 	"../storage"
 )
@@ -35,7 +36,11 @@ type PostRegisterAppObj struct {
 }
 
 func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
-	accountID := "testaccount"
+	accountID, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 	r.ParseForm()
 	appIDString := r.FormValue("appID")
 	appID := int64(0)
@@ -52,18 +57,29 @@ func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	if appID >= int64(len(applist)) {
-		http.Error(w, fmt.Errorf("index out of range").Error(), 400)
-		return
+	if appID != 0 || len(applist) != 0 {
+		if appID >= int64(len(applist)) {
+			http.Error(w, fmt.Errorf("index out of range").Error(), 400)
+			return
+		}
+		fmt.Println(appID, len(applist))
+		appstats, err := requestAppInfo(applist[appID].AppID)
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		fmt.Println(applist)
+		fmt.Println(appstats)
 	}
-	fmt.Println(appID, len(applist))
-	appstats, err := requestAppInfo(applist[appID].AppID)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
-		return
+	t, err := template.New("index.html").ParseFiles("ds/site/index.html")
+	fmt.Println(t, err)
+	data := struct {
+		BaseURL
+	}{
+		baseURL,
 	}
-	fmt.Println(applist)
-	fmt.Println(appstats)
+	t.Execute(w, data)
+
 	// checkSession(w, r)
 
 }
@@ -77,7 +93,29 @@ func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 // 	}
 
 func AddAppViewHandler(w http.ResponseWriter, r *http.Request) {
-	accountID := "testaccount"
+	accountID, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	fmt.Println(accountID)
+	t, _ := template.New("addapp.html").ParseFiles("ds/site/addapp.html")
+	data := struct {
+		BaseURL
+		AddAppPostURL string
+	}{
+		baseURL,
+		"/post/addnewappop",
+	}
+	t.Execute(w, data)
+}
+
+func AddAppPostHandler(w http.ResponseWriter, r *http.Request) {
+	accountID, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 	r.ParseForm()
 	if r.FormValue("fullpkgname") == "" {
 		http.Error(w, fmt.Errorf("Full Package name is not specified").Error(), 400)
@@ -101,7 +139,11 @@ func AddAppViewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserInfoUpdateViewHandler(w http.ResponseWriter, r *http.Request) {
-	accountID := "testaccount"
+	accountID, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 	// storage.StoreInsert(storage.UserFormat{Username: accountID})
 	r.ParseForm()
 	storage.ModifyUser(
@@ -122,11 +164,25 @@ func UserInfoUpdateViewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserInfoDisplayViewHandler(w http.ResponseWriter, r *http.Request) {
-	accountID := "testaccount"
+	accountID, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
 	result, err := storage.FindMatchUser(storage.UserFormat{Username: accountID}, true)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
 	fmt.Println(result)
+	t, err := template.New("profile.html").ParseFiles("ds/site/profile.html")
+	fmt.Println(t, err)
+	data := struct {
+		BaseURL
+		ModifyProfilePostURL string
+	}{
+		baseURL,
+		"/post/modifyuserinfo",
+	}
+	t.Execute(w, data)
 }

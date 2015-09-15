@@ -21,8 +21,20 @@ type Page struct {
 	Body  []byte
 }
 
-type Person struct {
-	UserName string
+type BaseURL struct {
+	InfoViewURL      string
+	AddAppURL        string
+	ProfileURL       string
+	ModifyProfileURL string
+	LogoutURL        string
+}
+
+var baseURL = BaseURL{
+	InfoViewURL:      "/view/getappdata",
+	AddAppURL:        "/view/addnewapp",
+	ProfileURL:       "/view/displayuserinfo",
+	ModifyProfileURL: "/view/supplementuserinfo",
+	LogoutURL:        "/logout",
 }
 
 var conf = &oauth2.Config{
@@ -40,12 +52,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("login.html").ParseFiles("ds/site/login.html")
 
 	fmt.Println(t)
+
 	data := struct {
+		BaseURL
 		Title         string
 		Items         []string
 		GithubAuthURL string
 	}{
-		Title: "My page",
+		BaseURL: baseURL,
+		Title:   "My page",
 		Items: []string{
 			"My photos",
 			"My blog",
@@ -99,7 +114,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/view/getappdata", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/view/addnewapp", http.StatusTemporaryRedirect)
 	// http.SetCookie(w, &cookies)
 }
 
@@ -124,7 +139,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Cookies())
 	_, err := r.Cookie("session-name")
 	if err != nil {
-		w.Write([]byte("no such cookie"))
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	cookieMonster := &http.Cookie{
@@ -132,5 +147,5 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		MaxAge: -1,
 	}
 	http.SetCookie(w, cookieMonster)
-	http.Redirect(w, r, "/", http.StatusUnauthorized)
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
