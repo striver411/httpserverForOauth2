@@ -17,7 +17,14 @@ type AppListInfo struct {
 }
 
 type AppStats struct {
-	Data []int `json:"data"`
+	Data []struct {
+		Open    int `json:"open"`
+		Install int `json:"install"`
+	} `json:"data"`
+	OpenToday      int `json:"open_today"`
+	InstallToday   int `json:"install_today"`
+	OpenLastDay    int `json:"open_last_day"`
+	InstallLastDay int `json:"install_last_day"`
 }
 
 type AppStatsRequst struct {

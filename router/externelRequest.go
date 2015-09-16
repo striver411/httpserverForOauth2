@@ -33,11 +33,15 @@ func requestApplist(accountID string) ([]AppListInfo, error) {
 }
 
 func requestAppInfo(appID string) (AppStats, error) {
+	jsonStr, err := json.Marshal(AppStatsRequst{
+		Granularity: "week",
+		Limit:       10,
+	})
 	u, _ := url.Parse("http://deepshare.chinacloudapp.cn:8080/appstats/" + appID)
 	q := u.Query()
 	u.RawQuery = q.Encode()
 
-	res, err := http.Get(u.String())
+	res, err := http.Post(u.String(), "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
 		return AppStats{}, err
 	}
