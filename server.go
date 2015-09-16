@@ -20,11 +20,6 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
 }
 
-type Page struct {
-	Title string
-	Body  []byte
-}
-
 var conf = &oauth2.Config{
 	ClientID:     "9487562b91cf0e58a7f5",
 	ClientSecret: "e7de8b20bdc18a0d4c221a319ef1a585b3c187a4",
@@ -61,6 +56,7 @@ func main() {
 	http.HandleFunc("/post/checkauth", UserAuthHandler)
 	http.HandleFunc("/post/addnewappop", AddAppPostHandler)
 	http.HandleFunc("/post/modifyuserinfo", UserInfoUpdateViewHandler)
+	http.HandleFunc("/post/appinfo", AppInfoRequestHandler)
 
 	http.HandleFunc("/redirect", RedirectHandler)
 	http.HandleFunc("/logout", LogoutHandler)

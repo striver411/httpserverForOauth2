@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -36,13 +37,37 @@ type PostRegisterAppObj struct {
 	UrlYYB      string `json:"url_yyb"`
 }
 
+type AppInfoReturnType struct {
+	AppList []AppListInfo `json:"applist"`
+	AppName string        `json:"appname"`
+	AppInfo AppStats      `json:"appstats"`
+}
+
 func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
+	_, auth := checkSession(w, r)
+	if !auth {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	t, err := template.New("index.html").ParseFiles("ds/site/index.html")
+	fmt.Println(t, err)
+	data := struct {
+		BaseURL
+	}{
+		baseURL,
+	}
+	t.Execute(w, data)
+}
+
+func AppInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 	accountID, auth := checkSession(w, r)
 	if !auth {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	r.ParseForm()
+
 	appIDString := r.FormValue("appID")
 	appID := int64(0)
 	if appIDString != "" {
@@ -58,6 +83,7 @@ func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+	resdata := AppInfoReturnType{AppName: "暂无APP", AppList: applist}
 	if appID != 0 || len(applist) != 0 {
 		if appID >= int64(len(applist)) {
 			http.Error(w, fmt.Errorf("index out of range").Error(), 400)
@@ -69,20 +95,18 @@ func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), 400)
 			return
 		}
+		resdata.AppInfo = appstats
+		resdata.AppName = applist[appID].AppName
 		fmt.Println(applist)
 		fmt.Println(appstats)
 	}
-	t, err := template.New("index.html").ParseFiles("ds/site/index.html")
-	fmt.Println(t, err)
-	data := struct {
-		BaseURL
-	}{
-		baseURL,
+	resjson, err := json.Marshal(resdata)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
 	}
-	t.Execute(w, data)
-
-	// checkSession(w, r)
-
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(resjson)
 }
 
 func AddAppViewHandler(w http.ResponseWriter, r *http.Request) {

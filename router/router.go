@@ -114,7 +114,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/addapp", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/index", http.StatusTemporaryRedirect)
 	// http.SetCookie(w, &cookies)
 }
 
