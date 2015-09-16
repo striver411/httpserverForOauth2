@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"../storage"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type AppListInfo struct {
@@ -84,14 +85,6 @@ func AppInfoViewHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// str1, _ := session.Values["Token"].(string)
-
-// 	fmt.Println(str1)
-// 	userFromToken, err := checkToken(str1)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-
 func AddAppViewHandler(w http.ResponseWriter, r *http.Request) {
 	accountID, auth := checkSession(w, r)
 	if !auth {
@@ -117,25 +110,34 @@ func AddAppPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseForm()
-	if r.FormValue("fullpkgname") == "" {
+	if r.FormValue("pkgname") == "" {
 		http.Error(w, fmt.Errorf("Full Package name is not specified").Error(), 400)
 		return
 	}
-	res, err := requestRegisterApp(
+	urlios := ""
+	urlandroid := ""
+	urlyyb := ""
+	if r.FormValue("apptype") == "1" {
+		urlandroid = r.FormValue("link")
+	} else {
+		urlios = r.FormValue("link")
+	}
+
+	_, err := requestRegisterApp(
 		accountID,
 		PostRegisterAppObj{
-			AppName:     r.FormValue("appname"),
-			FullPkgName: r.FormValue("fullpkgname"),
-			UrlIos:      r.FormValue("urlios"),
-			UrlAndroid:  r.FormValue("urlandroid"),
-			UrlYYB:      r.FormValue("urlyyb"),
+			AppName:     r.FormValue("name"),
+			FullPkgName: r.FormValue("pkgname"),
+			UrlIos:      urlios,
+			UrlAndroid:  urlandroid,
+			UrlYYB:      urlyyb,
 		},
 	)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, fmt.Errorf("创建失败").Error(), 400)
 		return
 	}
-	fmt.Println(res)
+	w.Write([]byte("创建成功"))
 }
 
 func UserInfoUpdateViewHandler(w http.ResponseWriter, r *http.Request) {
@@ -144,23 +146,28 @@ func UserInfoUpdateViewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
-	// storage.StoreInsert(storage.UserFormat{Username: accountID})
 	r.ParseForm()
-	storage.ModifyUser(
+	// fmt.Println(r)
+	err := storage.ModifyUser(
 		storage.UserFormat{
-			Username: accountID,
+			Id: bson.ObjectIdHex(accountID),
 		},
 		storage.UserFormat{
 			Password:    r.FormValue("password"),
 			GithubName:  r.FormValue("githubname"),
-			RealityName: r.FormValue("realityname"),
+			RealityName: r.FormValue("name"),
 			Phone:       r.FormValue("phone"),
 			Email:       r.FormValue("email"),
 			Wechat:      r.FormValue("wechat"),
-			QQAccount:   r.FormValue("qqaccount"),
+			QQAccount:   r.FormValue("qq"),
 		},
 		false,
 	)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+	w.Write([]byte("修改成功"))
 }
 
 func UserInfoDisplayViewHandler(w http.ResponseWriter, r *http.Request) {

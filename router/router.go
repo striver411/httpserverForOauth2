@@ -114,7 +114,7 @@ func GitHubCallbackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/view/addnewapp", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/addapp", http.StatusTemporaryRedirect)
 	// http.SetCookie(w, &cookies)
 }
 
@@ -148,4 +148,31 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	http.SetCookie(w, cookieMonster)
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
+func UserAuthHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	accountID, exist, err := AuthUser(r.FormValue("username"), r.FormValue("password"))
+	if !exist || err != nil {
+		w.Write([]byte("false"))
+		return
+	}
+	fmt.Println(accountID)
+
+	session, err := store.Get(r, "session-name")
+	if err != nil {
+		w.Write([]byte("false"))
+		return
+	}
+	session.Values["AccountID"] = accountID
+	err = session.Save(r, w)
+	if err != nil {
+		w.Write([]byte("false"))
+		return
+	}
+
+	w.Write([]byte("true"))
+
+	// http.Redirect(w, r, "/addapp", http.StatusTemporaryRedirect)
+
 }

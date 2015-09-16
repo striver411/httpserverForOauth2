@@ -9,6 +9,7 @@ import (
 	"../storage"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func GetAccountID(githubname, token string) (string, error) {
@@ -21,7 +22,7 @@ func GetAccountID(githubname, token string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		return res[0].Id, nil
+		return res[0].Id.Hex(), nil
 	}
 	err = storage.StoreInsert(storage.UserFormat{GithubName: githubname, Token: token})
 	if err != nil {
@@ -33,7 +34,7 @@ func GetAccountID(githubname, token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return res[0].Id, nil
+	return res[0].Id.Hex(), nil
 }
 
 func AuthUser(username, password string) (string, bool, error) {
@@ -44,12 +45,12 @@ func AuthUser(username, password string) (string, bool, error) {
 	if len(res) == 0 || res[0].Password != password {
 		return "", false, nil
 	}
-	return res[0].Id, true, nil
+	return res[0].Id.Hex(), true, nil
 }
 
 func CheckAccountIDExist(accountID string) (bool, error) {
-	res, err := storage.FindMatchUser(storage.UserFormat{Id: accountID}, false)
-	if err != nil || len(res) == 0 || res[0].Id != accountID {
+	res, err := storage.FindMatchUser(storage.UserFormat{Id: bson.ObjectIdHex(accountID)}, false)
+	if err != nil || len(res) == 0 || res[0].Id.Hex() != accountID {
 		return false, err
 
 	}

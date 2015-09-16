@@ -20,16 +20,16 @@ const (
 // URL/Content struct format
 type UserFormat struct {
 	// Account_id  int
-	Id          string `json:"id" bson:"_id,omitempty"`
-	Username    string `json:"username" bson:"username,omitempty"`
-	Password    string `json:"password" bson:"password,omitempty"`
-	GithubName  string `json:"githubname" bson:"githubname,omitempty"`
-	RealityName string `json:"realityname" bson:"realityname,omitempty"`
-	Phone       string `json:"phone" bson:"phone,omitempty"`
-	Email       string `json:"email" bson:"email,omitempty"`
-	Wechat      string `json:"wechat" bson:"wechat,omitempty"`
-	QQAccount   string `json:"qqaccount" bson:"qqaccount,omitempty"`
-	Token       string `json:"token" bson:"token,omitempty"`
+	Id          bson.ObjectId `json:"id" bson:"_id,omitempty"`
+	Username    string        `json:"username" bson:"username,omitempty"`
+	Password    string        `json:"password" bson:"password,omitempty"`
+	GithubName  string        `json:"githubname" bson:"githubname,omitempty"`
+	RealityName string        `json:"realityname" bson:"realityname,omitempty"`
+	Phone       string        `json:"phone" bson:"phone,omitempty"`
+	Email       string        `json:"email" bson:"email,omitempty"`
+	Wechat      string        `json:"wechat" bson:"wechat,omitempty"`
+	QQAccount   string        `json:"qqaccount" bson:"qqaccount,omitempty"`
+	Token       string        `json:"token" bson:"token,omitempty"`
 }
 
 var UserCol *mgo.Collection

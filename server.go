@@ -58,6 +58,7 @@ func main() {
 	http.HandleFunc("/addapp", AddAppViewHandler)
 	http.HandleFunc("/profile", UserInfoDisplayViewHandler)
 
+	http.HandleFunc("/post/checkauth", UserAuthHandler)
 	http.HandleFunc("/post/addnewappop", AddAppPostHandler)
 	http.HandleFunc("/post/modifyuserinfo", UserInfoUpdateViewHandler)
 
