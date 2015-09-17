@@ -172,7 +172,4 @@ func UserAuthHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write([]byte("true"))
-
-	// http.Redirect(w, r, "/addapp", http.StatusTemporaryRedirect)
-
 }

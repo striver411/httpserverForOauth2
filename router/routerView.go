@@ -74,8 +74,7 @@ func AppInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	r.ParseForm()
-
-	appIDString := r.FormValue("appID")
+	appIDString := r.FormValue("appid")
 	appID := int64(0)
 	if appIDString != "" {
 		var err error
@@ -85,6 +84,7 @@ func AppInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	fmt.Println("AppID ", appID)
 	applist, err := requestApplist(accountID)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
@@ -96,7 +96,6 @@ func AppInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Errorf("index out of range").Error(), 400)
 			return
 		}
-		fmt.Println(appID, len(applist))
 		appstats, err := requestAppInfo(applist[appID].AppID)
 		if err != nil {
 			http.Error(w, err.Error(), 400)
@@ -104,14 +103,13 @@ func AppInfoRequestHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		resdata.AppInfo = appstats
 		resdata.AppName = applist[appID].AppName
-		fmt.Println(applist)
-		fmt.Println(appstats)
 	}
 	resjson, err := json.Marshal(resdata)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+	fmt.Println(resdata)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(resjson)
 }
